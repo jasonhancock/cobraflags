@@ -6,11 +6,12 @@ import (
 )
 
 type options struct {
-	cmd      *cobra.Command
-	short    string
-	long     string
-	version  *ver.Info
-	commands []*cobra.Command
+	cmd           *cobra.Command
+	short         string
+	long          string
+	version       *ver.Info
+	commands      []*cobra.Command
+	loggerEnabled bool
 }
 
 // Option is used to customize the command.
@@ -48,5 +49,13 @@ func WithVersion(info *ver.Info) Option {
 func WithCommand(cmd ...*cobra.Command) Option {
 	return func(o *options) {
 		o.commands = append(o.commands, cmd...)
+	}
+}
+
+// LoggerEnabled will add peristent flags from cobra-logger to the root command
+// and enable a helper method for constructing a logger.
+func LoggerEnabled(enabled bool) Option {
+	return func(o *options) {
+		o.loggerEnabled = enabled
 	}
 }
