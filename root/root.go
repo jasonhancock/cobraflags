@@ -58,6 +58,9 @@ func (c *Command) Execute() {
 	defer stop()
 
 	if err := c.root.ExecuteContext(ctx); err != nil {
+		if ec, ok := err.(ExitCoder); ok {
+			os.Exit(ec.ExitCode())
+		}
 		os.Exit(1)
 	}
 }
@@ -68,4 +71,10 @@ func (c *Command) AddCommand(cmds ...*cobra.Command) {
 
 func (c *Command) Logger(dest io.Writer, keyvals ...interface{}) *logger.L {
 	return c.loggerConfig.Logger(dest, keyvals...)
+}
+
+// ExitCoder allows for customization of the exit code when an error is
+// encountered.
+type ExitCoder interface {
+	ExitCode() int
 }
