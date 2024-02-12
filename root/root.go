@@ -2,6 +2,7 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ import (
 type Command struct {
 	root         *cobra.Command
 	loggerConfig *clog.Config
+	logger       *logger.L
 }
 
 func New(use string, opts ...Option) *Command {
@@ -29,9 +31,10 @@ func New(use string, opts ...Option) *Command {
 
 	if o.cmd == nil {
 		c.root = &cobra.Command{
-			Use:   use,
-			Short: o.short,
-			Long:  o.long,
+			Use:           use,
+			Short:         o.short,
+			Long:          o.long,
+			SilenceErrors: true,
 		}
 	} else {
 		c.root = o.cmd
@@ -58,6 +61,15 @@ func (c *Command) Execute() {
 	defer stop()
 
 	if err := c.root.ExecuteContext(ctx); err != nil {
+		if c.loggerConfig != nil {
+			// the logger has been enabled
+			if c.logger == nil {
+				c.logger = c.loggerConfig.Logger(os.Stderr)
+			}
+			c.logger.LogError("execution error", err)
+		} else {
+			fmt.Println(err)
+		}
 		if ec, ok := err.(ExitCoder); ok {
 			os.Exit(ec.ExitCode())
 		}
@@ -70,7 +82,8 @@ func (c *Command) AddCommand(cmds ...*cobra.Command) {
 }
 
 func (c *Command) Logger(dest io.Writer, keyvals ...interface{}) *logger.L {
-	return c.loggerConfig.Logger(dest, keyvals...)
+	c.logger = c.loggerConfig.Logger(dest, keyvals...)
+	return c.logger
 }
 
 // ExitCoder allows for customization of the exit code when an error is
