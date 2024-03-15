@@ -120,6 +120,25 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 			}
 
 			fs.StringVar(flags[i].dest.(*string), flags[i].name, defaultVal, flags[i].Usage())
+		case *bool:
+			var defaultVal bool
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(bool)
+				if !ok {
+					panic(fmt.Sprintf("%s is a bool, but the default value is not a bool", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Bool(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Bool(flags[i].envVar, false)
+				}
+			}
+
+			fs.BoolVar(flags[i].dest.(*bool), flags[i].name, defaultVal, flags[i].Usage())
 
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
@@ -156,6 +175,13 @@ func (s *FlagSet) Check() error {
 			if *val == 0 {
 				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
 			}
+		case *bool:
+			_, ok := f.dest.(*bool)
+			if !ok {
+				panic(fmt.Sprintf("%q not a bool", f.name))
+			}
+
+			// Doesn't really make sense to check for false here.
 
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
