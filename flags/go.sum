@@ -2,6 +2,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/jasonhancock/go-env v0.0.3 h1:Fimz0wUogkc/FstqevOAY+RdUiRQDeEzoexy/edlqbo=
 github.com/jasonhancock/go-env v0.0.3/go.mod h1:5tS38RxYzmesLfb0J7tUbOHP4KYSmXxn0vA0rPsYmYg=
+github.com/jasonhancock/go-env v0.0.4 h1:NAuNpFnr1HbcjIXZzifZxJGnw6VXmUcaqPhKENVYU3A=
+github.com/jasonhancock/go-env v0.0.4/go.mod h1:5tS38RxYzmesLfb0J7tUbOHP4KYSmXxn0vA0rPsYmYg=
 github.com/jasonhancock/go-helpers v0.0.4 h1:7d2ICXGa5dpFrcZfgn/i77lfZBlU1VQ4Q25J7L1XqCc=
 github.com/jasonhancock/go-helpers v0.0.4/go.mod h1:POASoVJuG6XCY2YH9XYW1Ab/MVaFMkE+wu+C87tBX8Y=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

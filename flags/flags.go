@@ -139,7 +139,44 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 			}
 
 			fs.BoolVar(flags[i].dest.(*bool), flags[i].name, defaultVal, flags[i].Usage())
+		case *int:
+			var defaultVal int
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(int)
+				if !ok {
+					panic(fmt.Sprintf("%s is an int, but the default value is not an int", flags[i].name))
+				}
 
+				if flags[i].envVar != "" {
+					defaultVal = env.Int(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Int(flags[i].envVar, 0)
+				}
+			}
+
+			fs.IntVar(flags[i].dest.(*int), flags[i].name, defaultVal, flags[i].Usage())
+		case *int64:
+			var defaultVal int64
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(int64)
+				if !ok {
+					panic(fmt.Sprintf("%s is an int64, but the default value is not an int64", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Int64(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Int64(flags[i].envVar, 0)
+				}
+			}
+
+			fs.Int64Var(flags[i].dest.(*int64), flags[i].name, defaultVal, flags[i].Usage())
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
 		}
@@ -182,6 +219,24 @@ func (s *FlagSet) Check() error {
 			}
 
 			// Doesn't really make sense to check for false here.
+		case *int:
+			val, ok := f.dest.(*int)
+			if !ok {
+				panic(fmt.Sprintf("%q not an int", f.name))
+			}
+
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
+		case *int64:
+			val, ok := f.dest.(*int64)
+			if !ok {
+				panic(fmt.Sprintf("%q not an int64", f.name))
+			}
+
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
 
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
