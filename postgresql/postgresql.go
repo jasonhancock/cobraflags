@@ -52,7 +52,6 @@ func NewConfig(flagSet *pflag.FlagSet) *Config {
 			"db-pass",
 			"Database password",
 			flags.Env("DB_PASSWORD"),
-			flags.Required(),
 		),
 
 		flags.New(
@@ -97,6 +96,10 @@ func (cfg *Config) Connect() (*sqlx.DB, error) {
 		"user=" + cfg.User,
 		"dbname=" + cfg.Name,
 		"sslmode=" + cfg.SSLMode,
+	}
+
+	if cfg.Password != "" {
+		opts = append(opts, "password="+cfg.Password)
 	}
 
 	if cfg.SSLMode != "disable" {
