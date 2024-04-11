@@ -1,7 +1,8 @@
 package postgresql
 
 import (
-	"strconv"
+	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/jasonhancock/cobraflags/flags"
@@ -20,6 +21,7 @@ type Config struct {
 	SSLRootCert string
 	SSLKey      string
 	SSLCert     string
+	SSLInline   bool
 
 	flags.FlagSet
 }
@@ -84,35 +86,53 @@ func NewConfig(flagSet *pflag.FlagSet) *Config {
 	return &c
 }
 
+// DSN will return the DSN string.
+func (cfg *Config) DSN() (string, error) {
+	if err := cfg.Check(); err != nil {
+		return "", err
+	}
+
+	hosts := strings.Split(cfg.Host, ",")
+	for i := range hosts {
+		hosts[i] = fmt.Sprintf("%s:%d", hosts[i], cfg.Port)
+	}
+
+	var auth string
+	if cfg.User != "" {
+		auth = cfg.User
+		if cfg.Password != "" {
+			auth += ":" + cfg.Password
+		}
+		auth += "@"
+	}
+
+	data := make(url.Values)
+	data.Add("sslmode", cfg.SSLMode)
+
+	if cfg.SSLMode != "disable" {
+		// By setting the SSLInline parameter to true we can pass the certificates
+		// directly in the connection string instead of writing them to disk.
+		if cfg.SSLInline {
+			data.Add("sslinline", "true")
+		}
+
+		if cfg.SSLMode == "verify-full" || cfg.SSLMode == "require" {
+			data.Add("sslrootcert", cfg.SSLRootCert)
+		}
+
+		data.Add("sslkey", cfg.SSLKey)
+		data.Add("sslcert", cfg.SSLCert)
+	}
+
+	return "postgresql://" + auth + strings.Join(hosts, ",") + "/" + cfg.Name + "?" + data.Encode(), nil
+}
+
 // Connect attempts to connect to the database.
 func (cfg *Config) Connect() (*sqlx.DB, error) {
-	if err := cfg.Check(); err != nil {
+	dsn, err := cfg.DSN()
+	if err != nil {
 		return nil, err
 	}
 
-	opts := []string{
-		"host=" + cfg.Host,
-		"port=" + strconv.Itoa(cfg.Port),
-		"user=" + cfg.User,
-		"dbname=" + cfg.Name,
-		"sslmode=" + cfg.SSLMode,
-	}
-
-	if cfg.Password != "" {
-		opts = append(opts, "password="+cfg.Password)
-	}
-
-	if cfg.SSLMode != "disable" {
-		if cfg.SSLMode == "verify-full" || cfg.SSLMode == "require" {
-			opts = append(opts, "sslrootcert="+cfg.SSLRootCert)
-		}
-
-		// TODO: we can apparently provide the cert/key as raw strings by setting the
-		// sslinline=true parameter. This might be useful if/when loading the cert from
-		// something like Vault. See https://github.com/lib/pq/blob/master/ssl.go#L96
-		opts = append(opts, "sslkey="+cfg.SSLKey)
-		opts = append(opts, "sslcert="+cfg.SSLCert)
-	}
-
-	return sqlx.Connect("postgres", strings.Join(opts, " "))
+	return sqlx.Connect("postgres", dsn)
 }
