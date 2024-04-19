@@ -19,6 +19,7 @@ type Command struct {
 	root         *cobra.Command
 	loggerConfig *clog.Config
 	logger       *logger.L
+	Version      *ver.Info
 }
 
 func New(use string, opts ...Option) *Command {
@@ -41,6 +42,7 @@ func New(use string, opts ...Option) *Command {
 	}
 
 	if o.version != nil {
+		c.Version = o.version
 		c.root.AddCommand(ver.NewCmd(*o.version))
 	}
 
