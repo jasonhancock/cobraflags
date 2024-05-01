@@ -3,7 +3,7 @@ module github.com/jasonhancock/cobraflags/root
 go 1.22.0
 
 require (
-	github.com/jasonhancock/cobra-logger v0.0.5
+	github.com/jasonhancock/cobra-logger v0.0.6
 	github.com/jasonhancock/cobra-version v0.0.5
 	github.com/jasonhancock/go-logger v0.0.5
 	github.com/spf13/cobra v1.8.0

@@ -11,6 +11,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/jasonhancock/cobra-logger v0.0.5 h1:H66uICSDu/EUDSHswpUy0bXOWD8gLH9ytQnZOSg6OpM=
 github.com/jasonhancock/cobra-logger v0.0.5/go.mod h1:0EnC1DNMLaoZ/hkG+Aa20eWlMw4RV8Gfj+uGiIePVVI=
+github.com/jasonhancock/cobra-logger v0.0.6 h1:dfmfyuJiFh0fu+1SusqT0jjDAMrY6s4EajyhL+M58HQ=
+github.com/jasonhancock/cobra-logger v0.0.6/go.mod h1:0EnC1DNMLaoZ/hkG+Aa20eWlMw4RV8Gfj+uGiIePVVI=
 github.com/jasonhancock/cobra-version v0.0.5 h1:dXJrZmzwzzmncEVimPE+CAoctBJx855YOM3K5oyOjbg=
 github.com/jasonhancock/cobra-version v0.0.5/go.mod h1:nYfD1tuj/nuSX6mLetTgh0bgd7MapV0OSH72/56TrMo=
 github.com/jasonhancock/go-env v0.0.3 h1:Fimz0wUogkc/FstqevOAY+RdUiRQDeEzoexy/edlqbo=

@@ -83,8 +83,17 @@ func (c *Command) AddCommand(cmds ...*cobra.Command) {
 	c.root.AddCommand(cmds...)
 }
 
-func (c *Command) Logger(dest io.Writer, keyvals ...interface{}) *logger.L {
-	c.logger = c.loggerConfig.Logger(dest, keyvals...)
+func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
+	var o loggerOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	if o.name != "" {
+		c.loggerConfig.Name = o.name
+	}
+
+	c.logger = c.loggerConfig.Logger(dest, logger.With(o.keyvals...))
 	return c.logger
 }
 
@@ -92,4 +101,26 @@ func (c *Command) Logger(dest io.Writer, keyvals ...interface{}) *logger.L {
 // encountered.
 type ExitCoder interface {
 	ExitCode() int
+}
+
+type loggerOptions struct {
+	name    string
+	keyvals []any
+}
+
+// LoggerOption is used to customize the logger.
+type LoggerOption func(*loggerOptions)
+
+// WithKeyVals adds key/value pairs to the logger.
+func WithKeyVals(keyvals ...any) LoggerOption {
+	return func(o *loggerOptions) {
+		o.keyvals = append(o.keyvals, keyvals...)
+	}
+}
+
+// WithName sets the logger name.
+func WithName(name string) LoggerOption {
+	return func(o *loggerOptions) {
+		o.name = name
+	}
 }
