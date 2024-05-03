@@ -93,7 +93,7 @@ func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
 		c.loggerConfig.Name = o.name
 	}
 
-	c.logger = c.loggerConfig.Logger(dest, logger.With(o.keyvals...))
+	c.logger = c.loggerConfig.Logger(dest, o.keyvals...)
 	return c.logger
 }
 
