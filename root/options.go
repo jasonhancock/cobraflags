@@ -59,3 +59,25 @@ func LoggerEnabled(enabled bool) Option {
 		o.loggerEnabled = enabled
 	}
 }
+
+type loggerOptions struct {
+	name    string
+	keyvals []any
+}
+
+// LoggerOption is used to customize the logger.
+type LoggerOption func(*loggerOptions)
+
+// WithKeyVals adds key/value pairs to the logger.
+func WithKeyVals(keyvals ...any) LoggerOption {
+	return func(o *loggerOptions) {
+		o.keyvals = append(o.keyvals, keyvals...)
+	}
+}
+
+// WithName sets the logger name.
+func WithName(name string) LoggerOption {
+	return func(o *loggerOptions) {
+		o.name = name
+	}
+}
