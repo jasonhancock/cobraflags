@@ -15,6 +15,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ExitCoder allows for customization of the exit code when an error is
+// encountered.
+type ExitCoder interface {
+	ExitCode() int
+}
+
 type Command struct {
 	root         *cobra.Command
 	loggerConfig *clog.Config
@@ -97,30 +103,25 @@ func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
 	return c.logger
 }
 
-// ExitCoder allows for customization of the exit code when an error is
-// encountered.
-type ExitCoder interface {
-	ExitCode() int
-}
+// UserAgent formats and returns a string based on the binary name and command
+// path. If the binary's name is "foo" and invoked the "bar baz" subcommand, the
+// useragent would be "foo-bar-baz / <version>".
+func (c *Command) UserAgent(cmd *cobra.Command) string {
+	agent := strings.Join(getCmdPath(cmd), "-")
 
-type loggerOptions struct {
-	name    string
-	keyvals []any
-}
-
-// LoggerOption is used to customize the logger.
-type LoggerOption func(*loggerOptions)
-
-// WithKeyVals adds key/value pairs to the logger.
-func WithKeyVals(keyvals ...any) LoggerOption {
-	return func(o *loggerOptions) {
-		o.keyvals = append(o.keyvals, keyvals...)
+	if c.Version != nil {
+		agent += " / " + c.Version.Version
 	}
+
+	return agent
 }
 
-// WithName sets the logger name.
-func WithName(name string) LoggerOption {
-	return func(o *loggerOptions) {
-		o.name = name
+func getCmdPath(cmd *cobra.Command) []string {
+	name := strings.Fields(cmd.Use)[0]
+	result := []string{name}
+	if cmd.HasParent() {
+		result = append(getCmdPath(cmd.Parent()), name)
 	}
+
+	return result
 }
