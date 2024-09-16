@@ -99,6 +99,10 @@ func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
 		c.loggerConfig.Name = o.name
 	}
 
+	if c.Version != nil {
+		o.keyvals = append(o.keyvals, "version", c.Version.Version)
+	}
+
 	c.logger = c.loggerConfig.Logger(dest, o.keyvals...)
 	return c.logger
 }
