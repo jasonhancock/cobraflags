@@ -1,0 +1,29 @@
+name: release nsq
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'nsq/**'
+      - '.github/workflows/release-nsq.yaml'
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Release Version
+        id: version
+        run: |
+          export RELEASE_VERSION=v0.0.${{ github.run_number }}
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+
+      - name: create tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a nsq/$RELEASE_VERSION -m nsq/$RELEASE_VERSION
+          git push origin nsq/$RELEASE_VERSION
