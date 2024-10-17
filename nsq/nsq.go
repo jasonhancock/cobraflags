@@ -64,9 +64,13 @@ func NewConfig(flagSet *pflag.FlagSet) *Config {
 	return &c
 }
 
+type CallbackFunc func() error
+
 type options struct {
 	tlsConfig *tls.Config
 	userAgent string
+
+	consumerStopCallbackFn CallbackFunc
 }
 
 // Option is used to customize the configuration.
@@ -76,6 +80,14 @@ type Option func(*options)
 func WithTLSConfig(c *tls.Config) Option {
 	return func(o *options) {
 		o.tlsConfig = c
+	}
+}
+
+// WithConsumerStopCallback sets a callback function to execute after the
+// consumer has been stopped. Useful for cleanup like closing channels.
+func WithConsumerStopCallback(fn CallbackFunc) Option {
+	return func(o *options) {
+		o.consumerStopCallbackFn = fn
 	}
 }
 
@@ -94,7 +106,7 @@ func (cfg *Config) Consumer(
 	h nsq.Handler,
 	opts ...Option,
 ) (*nsq.Consumer, error) {
-	conf, err := cfg.baseConfig(opts...)
+	conf, o, err := cfg.baseConfig(opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,22 +122,23 @@ func (cfg *Config) Consumer(
 		return nil, fmt.Errorf("connecting to nsq: %w", err)
 	}
 
-	consumerWaitStop(ctx, wg, consumer)
-
-	return consumer, nil
-}
-
-func consumerWaitStop(ctx context.Context, wg *sync.WaitGroup, consumer *nsq.Consumer) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
 		consumer.Stop()
 		<-consumer.StopChan
+		if o.consumerStopCallbackFn != nil {
+			if err := o.consumerStopCallbackFn(); err != nil {
+				l.LogError("consumer stop callback", err)
+			}
+		}
 	}()
+
+	return consumer, nil
 }
 
-func (cfg *Config) baseConfig(opts ...Option) (*nsq.Config, error) {
+func (cfg *Config) baseConfig(opts ...Option) (*nsq.Config, *options, error) {
 	var o options
 	for _, opt := range opts {
 		opt(&o)
@@ -142,14 +155,14 @@ func (cfg *Config) baseConfig(opts ...Option) (*nsq.Config, error) {
 	} else if cfg.SSLCert != "" && cfg.SSLKey != "" {
 		ca, err := os.ReadFile(cfg.SSLCACert)
 		if err != nil {
-			return nil, fmt.Errorf("reading CA cert: %w", err)
+			return nil, nil, fmt.Errorf("reading CA cert: %w", err)
 		}
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM([]byte(ca))
 
 		cert, err := tls.LoadX509KeyPair(cfg.SSLCert, cfg.SSLKey)
 		if err != nil {
-			return nil, fmt.Errorf("loading TLS keypair: %w", err)
+			return nil, nil, fmt.Errorf("loading TLS keypair: %w", err)
 		}
 
 		o.tlsConfig = &tls.Config{
@@ -161,22 +174,22 @@ func (cfg *Config) baseConfig(opts ...Option) (*nsq.Config, error) {
 
 	if o.tlsConfig != nil {
 		if err := c.Set("tls_v1", true); err != nil {
-			return nil, fmt.Errorf("enabling TLS: %w", err)
+			return nil, nil, fmt.Errorf("enabling TLS: %w", err)
 		}
 		if err := c.Set("tls_config", o.tlsConfig); err != nil {
-			return nil, fmt.Errorf("setting tls config: %w", err)
+			return nil, nil, fmt.Errorf("setting tls config: %w", err)
 		}
 	}
 
 	if err := c.Validate(); err != nil {
-		return nil, fmt.Errorf("config didn't validate: %w", err)
+		return nil, nil, fmt.Errorf("config didn't validate: %w", err)
 	}
 
-	return c, nil
+	return c, &o, nil
 }
 
 func (cfg *Config) Producer(l *logger.L, opts ...Option) (*nsq.Producer, error) {
-	conf, err := cfg.baseConfig(opts...)
+	conf, _, err := cfg.baseConfig(opts...)
 	if err != nil {
 		return nil, err
 	}
