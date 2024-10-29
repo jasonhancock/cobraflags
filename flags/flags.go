@@ -118,7 +118,6 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 					defaultVal = os.Getenv(flags[i].envVar)
 				}
 			}
-
 			fs.StringVar(flags[i].dest.(*string), flags[i].name, defaultVal, flags[i].Usage())
 		case *bool:
 			var defaultVal bool
@@ -137,7 +136,6 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 					defaultVal = env.Bool(flags[i].envVar, false)
 				}
 			}
-
 			fs.BoolVar(flags[i].dest.(*bool), flags[i].name, defaultVal, flags[i].Usage())
 		case *int:
 			var defaultVal int
@@ -156,7 +154,6 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 					defaultVal = env.Int(flags[i].envVar, 0)
 				}
 			}
-
 			fs.IntVar(flags[i].dest.(*int), flags[i].name, defaultVal, flags[i].Usage())
 		case *int64:
 			var defaultVal int64
@@ -177,6 +174,78 @@ func (s *FlagSet) Add(fs *pflag.FlagSet, flags ...*flag) {
 			}
 
 			fs.Int64Var(flags[i].dest.(*int64), flags[i].name, defaultVal, flags[i].Usage())
+		case *uint8:
+			var defaultVal uint8
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(uint8)
+				if !ok {
+					panic(fmt.Sprintf("%s is an uint8, but the default value is not an uint8", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint8(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint8(flags[i].envVar, 0)
+				}
+			}
+			fs.Uint8Var(flags[i].dest.(*uint8), flags[i].name, defaultVal, flags[i].Usage())
+		case *uint16:
+			var defaultVal uint16
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(uint16)
+				if !ok {
+					panic(fmt.Sprintf("%s is an uint16, but the default value is not an uint16", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint16(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint16(flags[i].envVar, 0)
+				}
+			}
+			fs.Uint16Var(flags[i].dest.(*uint16), flags[i].name, defaultVal, flags[i].Usage())
+		case *uint32:
+			var defaultVal uint32
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(uint32)
+				if !ok {
+					panic(fmt.Sprintf("%s is an uint32, but the default value is not an uint32", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint32(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint32(flags[i].envVar, 0)
+				}
+			}
+			fs.Uint32Var(flags[i].dest.(*uint32), flags[i].name, defaultVal, flags[i].Usage())
+		case *uint64:
+			var defaultVal uint64
+			if flags[i].defaultValue != nil {
+				var ok bool
+				defaultVal, ok = flags[i].defaultValue.(uint64)
+				if !ok {
+					panic(fmt.Sprintf("%s is an uint64, but the default value is not an uint64", flags[i].name))
+				}
+
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint64(flags[i].envVar, defaultVal)
+				}
+			} else {
+				if flags[i].envVar != "" {
+					defaultVal = env.Uint64(flags[i].envVar, 0)
+				}
+			}
+			fs.Uint64Var(flags[i].dest.(*uint64), flags[i].name, defaultVal, flags[i].Usage())
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
 		}
@@ -199,7 +268,6 @@ func (s *FlagSet) Check() error {
 			if !ok {
 				panic(fmt.Sprintf("%q not a string", f.name))
 			}
-
 			if *val == "" {
 				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
 			}
@@ -208,7 +276,6 @@ func (s *FlagSet) Check() error {
 			if !ok {
 				panic(fmt.Sprintf("%q not a time.Duration", f.name))
 			}
-
 			if *val == 0 {
 				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
 			}
@@ -224,7 +291,6 @@ func (s *FlagSet) Check() error {
 			if !ok {
 				panic(fmt.Sprintf("%q not an int", f.name))
 			}
-
 			if *val == 0 {
 				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
 			}
@@ -233,11 +299,41 @@ func (s *FlagSet) Check() error {
 			if !ok {
 				panic(fmt.Sprintf("%q not an int64", f.name))
 			}
-
 			if *val == 0 {
 				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
 			}
-
+		case *uint8:
+			val, ok := f.dest.(*uint8)
+			if !ok {
+				panic(fmt.Sprintf("%q not an uint8", f.name))
+			}
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
+		case *uint16:
+			val, ok := f.dest.(*uint16)
+			if !ok {
+				panic(fmt.Sprintf("%q not an uint16", f.name))
+			}
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
+		case *uint32:
+			val, ok := f.dest.(*uint32)
+			if !ok {
+				panic(fmt.Sprintf("%q not an uint32", f.name))
+			}
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
+		case *uint64:
+			val, ok := f.dest.(*uint64)
+			if !ok {
+				panic(fmt.Sprintf("%q not an uint64", f.name))
+			}
+			if *val == 0 {
+				errs = append(errs, fmt.Errorf("required value %q not specified", f.name))
+			}
 		default:
 			panic(fmt.Sprintf("unsupported type %T", t))
 		}
