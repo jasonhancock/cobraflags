@@ -26,58 +26,63 @@ type Config struct {
 	flags.FlagSet
 }
 
-func NewConfig(flagSet *pflag.FlagSet) *Config {
+func NewConfig(flagSet *pflag.FlagSet, opts ...Option) *Config {
+	var o options
 	var c Config
+
+	for _, opt := range opts {
+		opt(&o)
+	}
 
 	c.Add(
 		flagSet,
 
 		flags.New(
 			&c.Host,
-			"db-host",
+			o.flagName("db-host"),
 			"Database hostname or IP address",
-			flags.Env("DB_HOST"),
+			flags.Env(o.envName("DB_HOST")),
 			flags.Default("127.0.0.1"),
 			flags.Required(),
 		),
 
 		flags.New(
 			&c.User,
-			"db-user",
+			o.flagName("db-user"),
 			"Datatabase username",
-			flags.Env("DB_USER"),
+			flags.Env(o.envName("DB_USER")),
 			flags.Required(),
 		),
 
 		flags.New(
 			&c.Password,
-			"db-pass",
+			o.flagName("db-pass"),
 			"Database password",
-			flags.Env("DB_PASSWORD"),
+			flags.Env(o.envName("DB_PASSWORD")),
 		),
 
 		flags.New(
 			&c.Name,
-			"db-name",
+			o.flagName("db-name"),
 			"Database name",
-			flags.Env("DB_NAME"),
+			flags.Env(o.envName("DB_NAME")),
 			flags.Required(),
 		),
 
 		flags.New(
 			&c.Port,
-			"db-port",
+			o.flagName("db-port"),
 			"Database port",
-			flags.Env("DB_PORT"),
+			flags.Env(o.envName("DB_PORT")),
 			flags.Default(5432),
 			flags.Required(),
 		),
 
 		flags.New(
 			&c.SSLMode,
-			"db-ssl-mode",
+			o.flagName("db-ssl-mode"),
 			"Database SSL mode",
-			flags.Env("DB_SSL_MODE"),
+			flags.Env(o.envName("DB_SSL_MODE")),
 			flags.Default("disable"),
 			flags.Required(),
 		),
@@ -135,4 +140,35 @@ func (cfg *Config) Connect() (*sqlx.DB, error) {
 	}
 
 	return sqlx.Connect("postgres", dsn)
+}
+
+type options struct {
+	prefix string
+}
+
+func (o options) flagName(name string) string {
+	if o.prefix == "" {
+		return name
+	}
+
+	return strings.ToLower(o.prefix) + "-" + name
+}
+
+func (o options) envName(name string) string {
+	if o.prefix == "" {
+		return name
+	}
+
+	return strings.ToUpper(o.prefix) + "_" + name
+}
+
+// Option is used to customize
+type Option func(*options)
+
+// WithPrefix sets the prefix name to use for environment variables and flags.
+// Useful if your app has to connect to multiple databases.
+func WithPrefix(prefix string) Option {
+	return func(o *options) {
+		o.prefix = prefix
+	}
 }
