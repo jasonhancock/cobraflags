@@ -3,7 +3,6 @@ package flags
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/jasonhancock/go-helpers"
 	"github.com/spf13/pflag"
@@ -121,7 +120,6 @@ func (s *FlagSet) Check() error {
 	var errs []error
 
 	for _, f := range s.flags {
-		log.Printf("%s %t", f.name, f.required)
 		if !f.required {
 			continue
 		}
