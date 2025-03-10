@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -105,6 +106,12 @@ func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
 
 	c.logger = c.loggerConfig.Logger(dest, o.keyvals...)
 	return c.logger
+}
+
+// LogLevelHandler returns an HTTP handler that is capable of changing the log
+// level.
+func (c *Command) LogLevelHandler() func(http.ResponseWriter, *http.Request) {
+	return c.loggerConfig.LogLevelHandler
 }
 
 // UserAgent formats and returns a string based on the binary name and command
