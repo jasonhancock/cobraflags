@@ -86,6 +86,27 @@ func NewConfig(flagSet *pflag.FlagSet, opts ...Option) *Config {
 			flags.Default("disable"),
 			flags.Required(),
 		),
+
+		flags.New(
+			&c.SSLCert,
+			o.flagName("db-tls-cert"),
+			"TLS client certificate",
+			flags.Env(o.envName("DB_TLS_CERT")),
+		),
+
+		flags.New(
+			&c.SSLKey,
+			o.flagName("db-tls-key"),
+			"TLS client private key",
+			flags.Env(o.envName("DB_TLS_KEY")),
+		),
+
+		flags.New(
+			&c.SSLRootCert,
+			o.flagName("db-tls-ca-cert"),
+			"TLS CA Certificate",
+			flags.Env(o.envName("DB_TLS_CA_CERT")),
+		),
 	)
 
 	return &c
