@@ -56,9 +56,9 @@ func NotRequired() Option {
 	}
 }
 
-func Validate(fn ValidationFunc) Option {
+func Validate(fns ...ValidationFunc) Option {
 	return func(o *flag) {
-		o.required = false
+		o.validationFns = append(o.validationFns, fns...)
 	}
 }
 
@@ -72,7 +72,7 @@ type flag struct {
 	usage        string
 	required     bool
 
-	validationFn ValidationFunc
+	validationFns []ValidationFunc
 }
 
 func (f *flag) Usage() string {
@@ -120,6 +120,12 @@ func (s *FlagSet) Check() error {
 	var errs []error
 
 	for _, f := range s.flags {
+		for _, v := range f.validationFns {
+			if err := v(f.dest); err != nil {
+				errs = append(errs, newValidationError(f.name, err))
+			}
+		}
+
 		if !f.required {
 			continue
 		}
@@ -136,4 +142,8 @@ func (s *FlagSet) Check() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func newValidationError(fieldName string, err error) error {
+	return fmt.Errorf("validation error for flag %q: %w", fieldName, err)
 }
