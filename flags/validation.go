@@ -4,6 +4,10 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+
+	"github.com/jasonhancock/go-helpers"
 )
 
 // Enum provides a validation function where the flag value must be in the set
@@ -26,6 +30,9 @@ func Enum[T comparable](vals ...T) ValidationFunc {
 		return nil
 	}
 }
+
+var errLessThanMin = errors.New("value is less than minimum value")
+var errGreaterThanMax = errors.New("value is greater than maximum value")
 
 // Minimum provides a validation function where the flag value must be greater
 // than or equal to the provided minimum value.
@@ -62,5 +69,49 @@ func Maximum[T cmp.Ordered](max T) ValidationFunc {
 	}
 }
 
-var errLessThanMin = errors.New("value is less than minimum value")
-var errGreaterThanMax = errors.New("value is greater than maximum value")
+// URL provides a validation function where the flag value must be parseable as a URL.
+func URL(opts ...URLValidationOption) ValidationFunc {
+	var o urlValidationOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	return func(val any) error {
+		str, ok := val.(*string)
+		if !ok {
+			return errors.New("value was not a string")
+		}
+
+		u, err := url.Parse(*str)
+		if err != nil {
+			return fmt.Errorf("parsing %q as a URL: %w", *str, err)
+		}
+
+		if len(o.validSchemes) > 0 {
+			if _, ok := o.validSchemes[u.Scheme]; !ok {
+				return fmt.Errorf("%q is not in list of valid schemes: %s", u.Scheme, strings.Join(helpers.KeysSorted(o.validSchemes), "|"))
+			}
+		}
+
+		return nil
+	}
+}
+
+type urlValidationOptions struct {
+	validSchemes map[string]struct{}
+}
+
+// URLValidationOption is used to validate URLs.
+type URLValidationOption func(*urlValidationOptions)
+
+// RequireScheme sets a list of acceptable schemes.
+func RequireScheme(validSchemes ...string) URLValidationOption {
+	return func(o *urlValidationOptions) {
+		if o.validSchemes == nil {
+			o.validSchemes = make(map[string]struct{})
+		}
+		for _, v := range validSchemes {
+			o.validSchemes[v] = struct{}{}
+		}
+	}
+}
