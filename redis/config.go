@@ -50,23 +50,28 @@ func NewConfig(cmd *cobra.Command) *Config {
 	return &c
 }
 
+// Conn gets a dedicated Redis connection.
+func (cfg *Config) Conn() (redis.Conn, error) {
+	c, err := redis.Dial("tcp", cfg.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := c.Do("SELECT", cfg.DB); err != nil {
+		cErr := c.Close()
+		if cErr != nil {
+			err = errors.Join(err, cErr)
+		}
+		return nil, err
+	}
+
+	return c, nil
+}
+
 // Pool gets the Pool.
 func (cfg *Config) Pool() *redis.Pool {
 	return &redis.Pool{
 		IdleTimeout: cfg.IdleTimeout,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", cfg.Addr)
-			if err != nil {
-				return nil, err
-			}
-			if _, err := c.Do("SELECT", cfg.DB); err != nil {
-				cErr := c.Close()
-				if cErr != nil {
-					err = errors.Join(err, cErr)
-				}
-				return nil, err
-			}
-			return c, nil
-		},
+		Dial:        cfg.Conn,
 	}
 }
