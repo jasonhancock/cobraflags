@@ -107,3 +107,60 @@ func TestMaximum(t *testing.T) {
 		assert.ErrorContains(t, err, "value was not a")
 	})
 }
+
+func TestURL(t *testing.T) {
+	t.Run("basic", func(t *testing.T) {
+		tests := []struct {
+			input string
+			err   error
+		}{
+			{"https://example.com", nil},
+			{"12345", nil},
+			{"", nil},
+			{"http://example.com/%zz", errors.New("invalid URL escape")},
+			{"http://example.com:ab", errors.New("invalid port")},
+			{"http://exa mple.com/helloworld", errors.New("invalid character")},
+			{"://example.com", errors.New("missing protocol scheme")},
+			{"htt p://example.com", errors.New("first path segment in URL cannot contain colon")},
+		}
+
+		fn := URL()
+
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				result := fn(&tt.input)
+				if tt.err == nil {
+					require.NoError(t, result)
+					return
+				}
+				require.Error(t, result)
+				require.Contains(t, result.Error(), tt.err.Error())
+			})
+		}
+	})
+
+	t.Run("scheme", func(t *testing.T) {
+		tests := []struct {
+			input string
+			err   error
+		}{
+			{"https://example.com", nil},
+			{"file:///foo", nil},
+			{"http://example.com", errors.New(`"http" is not in list of valid schemes: file|https`)},
+		}
+
+		fn := URL(RequireScheme("https", "file"))
+
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				result := fn(&tt.input)
+				if tt.err == nil {
+					require.NoError(t, result)
+					return
+				}
+				require.Error(t, result)
+				require.Contains(t, result.Error(), tt.err.Error())
+			})
+		}
+	})
+}
