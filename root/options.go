@@ -2,6 +2,7 @@ package root
 
 import (
 	ver "github.com/jasonhancock/cobra-version"
+	"github.com/jasonhancock/go-logger"
 	"github.com/spf13/cobra"
 )
 
@@ -61,8 +62,9 @@ func LoggerEnabled(enabled bool) Option {
 }
 
 type loggerOptions struct {
-	name    string
-	keyvals []any
+	name                   string
+	keyvals                []any
+	contextResolutionFuncs []logger.ContextResolutionFunc
 }
 
 // LoggerOption is used to customize the logger.
@@ -72,6 +74,16 @@ type LoggerOption func(*loggerOptions)
 func WithKeyVals(keyvals ...any) LoggerOption {
 	return func(o *loggerOptions) {
 		o.keyvals = append(o.keyvals, keyvals...)
+	}
+}
+
+// WithContextResolutionFunc registers functions that extract fields from the
+// context passed to the logger's *Context methods. It can be specified
+// multiple times; the funcs run in the order they were registered. See
+// logger.ContextResolutionFunc for the contract.
+func WithContextResolutionFunc(fns ...logger.ContextResolutionFunc) LoggerOption {
+	return func(o *loggerOptions) {
+		o.contextResolutionFuncs = append(o.contextResolutionFuncs, fns...)
 	}
 }
 
