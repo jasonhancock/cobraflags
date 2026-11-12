@@ -104,7 +104,12 @@ func (c *Command) Logger(dest io.Writer, opts ...LoggerOption) *logger.L {
 		o.keyvals = append(o.keyvals, "version", c.Version.Version)
 	}
 
-	c.logger = c.loggerConfig.Logger(dest, o.keyvals...)
+	lopts := []logger.Option{logger.With(o.keyvals...)}
+	for _, fn := range o.contextResolutionFuncs {
+		lopts = append(lopts, logger.WithContextResolutionFunc(fn))
+	}
+
+	c.logger = c.loggerConfig.LoggerWithOptions(dest, lopts...)
 	return c.logger
 }
 
